@@ -31,10 +31,12 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    keyboard/QKeyPushButton.cpp \
-    keyboard/widgetKeyBoard.cpp \
-    examplemyfocus.cpp \
-    fpgafs.cpp
+        filetab.cpp \
+        keyboard/QKeyPushButton.cpp \
+        keyboard/widgetKeyBoard.cpp \
+        examplemyfocus.cpp \
+        fpgafs.cpp \
+        synthtab.cpp
 
 HEADERS  += mainwindow.h \
     sliderproxy.h \
@@ -53,6 +55,7 @@ QMAKE_CXXFLAGS += -Wno-psabi
 target.path = /home/holosynth/prg
 mypackage.files = syx
 mypackage.path = /home/holosynth/prg
-INSTALLS += target mypackage
+INSTALLS += target
+INSTALLS += mypackage
 
 RESOURCES += virtualboard.qrc

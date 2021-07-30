@@ -10,6 +10,8 @@
 
 #include <QWidget>
 
+#define SYX_FILE_DIR "/home/holosynth/prg/syx/"
+
 namespace Ui {
 class MainWindow;
 }
