@@ -28,17 +28,22 @@ class fileTab : public QWidget
 
 public:
     explicit fileTab(QWidget *parent = 0);
-    FPGAFS *fpga;
     ~fileTab();
+    QString* SYX_FILE_DIR;
+//    FPGAFS *fpga;
 //    synth1Tab* synthTab;
+    QString *sysexfolder;
     QPushButton *closebutton;
     QPushButton *fileopenbutton;
+    QPushButton *sdirbutton;
     QPushButton *keyboardopenbutton;
     QPushButton *keyboardclosebutton;
 
     widgetKeyBoard  *myKeyboard;
 
     //    QPushButton *synthtolcdbutton;
+    QLabel *sysexfldLabel;
+    QLineEdit *sysexfld;
     QTextEdit *display;
 //    QLineEdit *lineed;
 
@@ -49,13 +54,17 @@ signals:
 
 public slots:
     void on_closebutton_pressed();
-     void on_keyboardopenbutton_pressed();
-     void on_keyboardclosebutton_pressed();
+    void on_keyboardopenbutton_pressed();
+    void on_keyboardclosebutton_pressed();
 //    void on_synthtolcdbutton_pressed();
     void open_file_dialog();
-//    void saveSyxFile(QString filename);
+    void on_sdirbutton_pressed();
+ //    void saveSyxFile(QString filename);
 
 private:
+    QString m_sSettingsFile;
+    void loadSettings();
+    void saveSettings();
 };
 
 #endif // FILETAB_H

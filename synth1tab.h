@@ -37,7 +37,7 @@ class synth1Tab : public QWidget
 public:
    explicit  synth1Tab(QWidget *parent = 0);
     FPGAFS *fpga;
-//    fileTab * ftab1;
+    fileTab * ftab1;
 
 //    widgetKeyBoard  *myKeyboard2;
     QLineEdit *filenamelineedit;
@@ -69,6 +69,7 @@ public:
     QStringList comLabels;
     QLCDNumber *com_lcd[7];
 
+    QComboBox *folderbox;
     QComboBox *fileloadbox;
     QPushButton *synthtolcdbutton;
 
@@ -119,6 +120,8 @@ public slots:
     void midi_intern_pressed(void);
     void main_slider_val_change(int value);
     void setLCD(unsigned int RegAddress, u_int8_t newValue);
+    void populate_folderbox();
+    void on_folderbox_activated(const QString &file);
     void populate_fileloadbox();
     void on_fileloadbox_activated(const QString &file);
     void preset_pressed(void);

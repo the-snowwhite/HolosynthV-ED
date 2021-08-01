@@ -39,6 +39,7 @@ SOURCES += main.cpp\
         synthtab.cpp
 
 HEADERS  += mainwindow.h \
+    qchecklist.h \
     sliderproxy.h \
     fpga.h \
     synth1tab.h \

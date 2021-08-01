@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include <QFile>
 #include <QFileDialog>
+#include <QVariant>
+#include <qchecklist.h>
 
 #define NUM_OSC 8
 
@@ -9,6 +11,7 @@ synth1Tab::synth1Tab(QWidget *parent)
 {
     unsigned int i,j;
     fpga = new FPGAFS;
+    ftab1 = new fileTab();
 //    fileTab* ftab1 = new fileTab();
     // Make main value slider
     QPalette *p_slider = new QPalette;
@@ -250,7 +253,7 @@ synth1Tab::synth1Tab(QWidget *parent)
 
     filenamelineedit = new QLineEdit(this);
     filenamelineedit->setGeometry(QRect(QPoint(895, 325),QSize(280, 50)));
-    QFont font2("Times",20);
+    QFont font2("Times",16);
     filenamelineedit->setFont(font2);
     filenamelineedit->setMaxLength(16);
     QObject::connect(filenamelineedit,SIGNAL(textChanged(QString)),this,SLOT(filenametext_changed(QString)));
@@ -261,15 +264,26 @@ synth1Tab::synth1Tab(QWidget *parent)
     {
         synthtolcd();
     }
+    folderbox = new QCheckList(this);
+    folderbox->setGeometry(QRect(QPoint(885,275),QSize(100,35)));
+    QFont font1("Times",13);
+    folderbox->setFont(font1);
+    populate_folderbox();
+    QObject::connect(folderbox,SIGNAL(activated(QString)),this,SLOT(on_folderbox_activated(QString)));
+
+    folderbox->setStyleSheet(" QComboBox { border: 1px solid gray;"
+                               "border-radius: 3px; padding: 1px 48px 1px 3px; min-width: 6em; }"
+                               "QScrollBar:vertical {border: 1px solid black; background:green; width:60px; margin: 0px 0px 0px 0px; }"
+                               );
     fileloadbox = new QComboBox(this);
-    fileloadbox->setGeometry(QRect(QPoint(885,275),QSize(350,35)));
-    QFont font1("Times",16);
+    fileloadbox->setGeometry(QRect(QPoint(1030,275),QSize(205,35)));
+//    QFont font1("Times",16);
     fileloadbox->setFont(font1);
     populate_fileloadbox();
     QObject::connect(fileloadbox,SIGNAL(activated(QString)),this,SLOT(on_fileloadbox_activated(QString)));
 
     fileloadbox->setStyleSheet(" QComboBox { border: 1px solid gray;"
-                               "border-radius: 3px; padding: 1px 48px 1px 3px; min-width: 6em; }"
+                               "border-radius: 3px; padding: 1px 8px 1px 3px; min-width: 6em; }"
                                "QScrollBar:vertical {border: 1px solid black; background:green; width:60px; margin: 0px 0px 0px 0px; }"
                                );
 
@@ -296,7 +310,6 @@ void synth1Tab::synthtolcd()
     u_int8_t regvalue;
     unsigned int Address;
     qDebug("synth2lcd start");
-    //        for(Address = 0x000;Address<0x040;Address++)
     for(Address = 0x000;Address<0x018;Address++) { // env 1, main vol env, env  2
         regvalue = fpga->SynthregGet(Address);                  setLCD(Address,regvalue);  }
     for(Address = 0x020;Address<0x028;Address++) { // env 3
@@ -327,17 +340,19 @@ void synth1Tab::synthtolcd()
         regvalue = fpga->SynthregGet(Address);                  setLCD(Address,regvalue);  }
     for(Address = 0x0f0;Address<0x0fc;Address++) { // osc 8
         regvalue = fpga->SynthregGet(Address);                  setLCD(Address,regvalue);  }
-     for(Address = 0x100 ;Address<0x180;Address++) { // mod + fb matrix
-         regvalue = fpga->SynthregGet(Address);                  setLCD(Address,regvalue);  }
-     for(Address =0x280;Address<=0x282;Address++) { // common
+    for(Address = 0x100 ;Address<0x180;Address++) { // mod + fb matrix
+        regvalue = fpga->SynthregGet(Address);                  setLCD(Address,regvalue);  }
+    for(Address =0x280;Address<=0x282;Address++) { // common
         regvalue = fpga->SynthregGet(Address);                  setLCD(Address,regvalue);
         if (Address == 0x282 && (regvalue & 0x10)==0) midiexternCheckBox->setChecked(true); }
-     for(Address =0x290;Address<0x2A0;Address++) { // common patch name
-         regvalue = fpga->SynthregGet(Address);                  setLCD(Address,regvalue);  }
-     qDebug("synth2lcd end");
-     filenamelineedit->setText(patch_name);                    // common patch name
-//     filenamelineedit->setText("hello");                    // common patch name
-    qDebug("Set filenamelineedit text= %s",qPrintable( patch_name));
+    patch_name.clear();
+    for(Address =0x290;Address<0x2A0;Address++) { // common patch name
+        regvalue = fpga->SynthregGet(Address); setLCD(Address,regvalue);}//patch_name.append((char) regvalue);
+//    filenamelineedit->clear();
+//    filenamelineedit->setText(patch_name);                    // common patch name
+    qDebug("Set filenamelineedit text= %s",qPrintable(patch_name));
+    qDebug("patchname is now: %s ",qUtf8Printable(patch_name));
+    qDebug("synth2lcd end");
 }
 
 void synth1Tab::setEnvPlot(int envNr)
@@ -570,7 +585,7 @@ void synth1Tab::setLCD(unsigned int RegAddress, u_int8_t newValue)
 {
    unsigned  int reg_y,reg_x;
     reg_x = RegAddress & 0xf;
-    qDebug("setLCD RegAddress = 0x%x value= %d",RegAddress,newValue);
+//    qDebug("setLCD RegAddress = 0x%x value= %d",RegAddress,newValue);
     if(RegAddress < 0x080)
     {
          reg_y = (RegAddress & 0xf0) >> 4;
@@ -607,31 +622,60 @@ void synth1Tab::setLCD(unsigned int RegAddress, u_int8_t newValue)
             }
         }
     }
-    else if(RegAddress >=0x290 && RegAddress < 0x2A0)
+   else if(RegAddress >=0x290 && RegAddress < 0x2A0)
     {
         if(RegAddress == 0x290) patch_name.clear();
         patch_name.append((char) newValue);
+        qDebug("Text: newValue = %s @ Address 0x%x",(const char *)&newValue,RegAddress);
+        if(RegAddress == 0x29F) {
+           filenamelineedit->clear();
+           filenamelineedit->setText(patch_name);
+        }
     }
-//    qDebug( "patchname is: " + patch_name);
-    filenamelineedit->clear();
-    filenamelineedit->setText(patch_name);
+}
+
+void synth1Tab::populate_folderbox()
+{
+    QStringList nameFilter("*.syx");
+    QDir directory(ftab1->sysexfld->text());
+    QStringList syxFilesAndDirectories = directory.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
+    folderbox->clear();
+    folderbox->addItems(syxFilesAndDirectories);
 }
 
 void synth1Tab::populate_fileloadbox()
 {
+    qDebug("@ populate_fileloadbox");
     QStringList nameFilter("*.syx");
-    QDir directory(SYX_FILE_DIR);
-    QStringList syxFilesAndDirectories = directory.entryList(nameFilter);
+    QDir directory(ftab1->sysexfld->text());
+    QFileInfoList syxFilesAndDirectories = directory.entryInfoList(nameFilter);
+    QStringList filelist;
     fileloadbox->clear();
-    fileloadbox->addItems(syxFilesAndDirectories);
+    for ( const auto& i : syxFilesAndDirectories  )
+    {
+//        filelist.append(i.completeBaseName());
+        fileloadbox->addItem(i.completeBaseName(),i.absoluteFilePath());
+    }
+//    fileloadbox->addItems(filelist);
 }
 
 void synth1Tab::on_fileloadbox_activated(const QString &file)
 {
-    fileTab *ftab1 = new fileTab();
-    ftab1->display->append(file);
+    qDebug("on_fileloadbox_activated");
+//    fileTab *ftab1 = new fileTab();
+//    ftab1->display->append(file);
     patch_name.clear();
-    readSyxFile(SYX_FILE_DIR + file);
+    qDebug("userData = %s",qUtf8Printable(fileloadbox->currentData().toString()));
+//    readSyxFile(ftab1->sysexfld->text() + "/" + file + ".syx");
+    readSyxFile(fileloadbox->currentData().toString());
+}
+
+void synth1Tab::on_folderbox_activated(const QString &dir)
+{
+//    fileTab *ftab1 = new fileTab();
+//    ftab1->display->append(dir);
+//    patch_name.clear();
+//    readSyxFile(SYX_FILE_DIR + file);
 }
 
 void synth1Tab::preset_pressed()
@@ -817,7 +861,7 @@ unsigned int synth1Tab::save_preset_to_file2()
 {
     QString filename =  filenamelineedit->text() + ".syx";
     QStringList nameFilter("*.syx");
-    QDir directory(SYX_FILE_DIR);//SYX_FILE_DIR
+    QDir directory(ftab1->sysexfld->text());//SYX_FILE_DIR
     QStringList syxFilesAndDirectories = directory.entryList(nameFilter);
     emit keyboard_hide();
     if(syxFilesAndDirectories.contains(filename)) {
@@ -848,28 +892,38 @@ void synth1Tab::readSyxFile(QString filename)
     unsigned int Address;
     unsigned int FileBufferIndex;
     u_int8_t regvalue;
+    qDebug("in readSyxFile(): filename = %s\n",qUtf8Printable(filename));
 
 //    synth1Tab* synthTab = MainWindow::ftab1;  //new synth1Tab();
 //    display->append(filename);
     QFile fileB(filename);
     if (!fileB.open(QIODevice::ReadOnly))
     {
-        QMessageBox::information(NULL,"show","<font size=12 > Failed to read</font>");
+        QMessageBox::information(NULL,"show","<font size=12 > Failed to read " + filename + "</font>");
         return;
     }
     Buffer=fileB.readAll();
     fileB.close();
     // read file into synth regs and ui
-    // Env 1, main vol , env 2
     if(Buffer.size() == 228 ) filetype = 1;
     else if(Buffer.size() == 676 ) filetype = 2;
     else {
-        QMessageBox::information(NULL,"show","<font size=12 >File " +filename + "<br>size: " +Buffer.size() + "<br> has wrong file size </font>"); //<font size=12 > </font>
+        QMessageBox::information(NULL,"show","<font size=12 >File " +filename + "<br>size: " +Buffer.size() + "<br> has wrong file size </font>");
         return;
     }
     qDebug("filetype = %d", filetype );
+    filenamelineedit->clear();
+    // Env 1
     FileBufferIndex = 3;
-    for(Address=0x000;Address < 0x018;Address++)
+    for(Address=0x000;Address < 0x010;Address++)// Env [0], main vol env(div [0])
+    {
+        regvalue = Buffer.at(FileBufferIndex);
+        fpga->SynthregSet(Address,regvalue);
+        setLCD(Address,regvalue);
+        FileBufferIndex++;
+    }
+    // Env 2
+    for(Address=0x010;Address < 0x018;Address++)// Env [1]
     {
         regvalue = Buffer.at(FileBufferIndex);
         fpga->SynthregSet(Address,regvalue);
@@ -878,7 +932,7 @@ void synth1Tab::readSyxFile(QString filename)
     }
     // Env 3
     FileBufferIndex = 0x23;
-    for(Address=0x020;Address < 0x028;Address++)
+    for(Address=0x020;Address < 0x028;Address++)// Env [2]//, (div [2])
     {
         regvalue = Buffer.at(FileBufferIndex);
         fpga->SynthregSet(Address,regvalue);
@@ -887,7 +941,7 @@ void synth1Tab::readSyxFile(QString filename)
     }
     // Env 4
     FileBufferIndex = 0x33;
-    for(Address=0x030;Address < 0x038;Address++)
+    for(Address=0x030;Address < 0x038;Address++)// Env [3]//, (div [2])
     {
         regvalue = Buffer.at(FileBufferIndex);
         fpga->SynthregSet(Address,regvalue);
@@ -897,7 +951,7 @@ void synth1Tab::readSyxFile(QString filename)
     if(filetype == 2){
         // Env 5
         FileBufferIndex = 0x43;
-        for(Address=0x040;Address < 0x034;Address++)
+        for(Address=0x040;Address < 0x034;Address++)// Env [4]//, (div [4])
         {
             regvalue = Buffer.at(FileBufferIndex);
             fpga->SynthregSet(Address,regvalue);
@@ -906,7 +960,7 @@ void synth1Tab::readSyxFile(QString filename)
         }
         // Env 6
         FileBufferIndex = 0x53;
-        for(Address=0x050;Address < 0x058;Address++)
+        for(Address=0x050;Address < 0x058;Address++)// Env [5]//, (div [5])
         {
             regvalue = Buffer.at(FileBufferIndex);
             fpga->SynthregSet(Address,regvalue);
@@ -915,7 +969,7 @@ void synth1Tab::readSyxFile(QString filename)
         }
         // Env 7
         FileBufferIndex = 0x63;
-        for(Address=0x060;Address < 0x068;Address++)
+        for(Address=0x060;Address < 0x068;Address++)// Env [6]//, (div [6])
         {
             regvalue = Buffer.at(FileBufferIndex);
             fpga->SynthregSet(Address,regvalue);
@@ -924,7 +978,7 @@ void synth1Tab::readSyxFile(QString filename)
         }
         // Env 8
         FileBufferIndex = 0x73;
-        for(Address=0x070;Address < 0x078;Address++)
+        for(Address=0x070;Address < 0x078;Address++)// Env [7]//, (div [7])
         {
             regvalue = Buffer.at(FileBufferIndex);
             fpga->SynthregSet(Address,regvalue);
@@ -1113,7 +1167,7 @@ void synth1Tab::readSyxFile(QString filename)
             FileBufferIndex++;
         }
     }
-    else if(filetype == 2){
+    else if(filetype == 3){
         FileBufferIndex = 0x103;
         for(Address=0x100;Address < 0x180;Address++) {
             regvalue = Buffer.at(FileBufferIndex);
@@ -1136,7 +1190,7 @@ void synth1Tab::readSyxFile(QString filename)
         FileBufferIndex = 0x283;
         for(Address=0x280;Address < 0x2A0;Address++) {
             regvalue = Buffer.at(FileBufferIndex);
-            if(Address >= 0x290) qDebug("read_syx_file name data = %d at address 0x%x", regvalue, Address);
+            if(Address >= 0x290) qDebug("read_syx_file name data = %s at address 0x%x", &regvalue, Address);
             fpga->SynthregSet(Address,regvalue);
             setLCD(Address,regvalue);
             FileBufferIndex++;
@@ -1147,14 +1201,14 @@ void synth1Tab::readSyxFile(QString filename)
 void synth1Tab::write_syx_file(QString filename)
 {
     patch_name.clear();
-    patch_name.append(filenamelineedit->text());
+    patch_name.append(filenamelineedit->text().toUtf8());
     QByteArray Buffer = PresetBuffer[cur_save_index];
     Buffer.replace(0x290,patch_name.size(),patch_name);
     Buffer.prepend((char) 0x70);
     Buffer.prepend((char) 0x7D);
     Buffer.prepend((char) 0xF0);
     Buffer.append((char) 0xF7);
-    QFile fileB(SYX_FILE_DIR + filename);//
+    QFile fileB(ftab1->sysexfld->text() + "/" + filename);//
     QMessageBox *msgBox = new QMessageBox;
     msgBox->setText("<font size=12 > Saving preset " + QString::number(cur_save_index+1) +" <br> to file " + filename +"<br>size = "+ QString::number(Buffer.size()) +  "</font>");
     msgBox->setInformativeText("<font size = 8> do you want to save under this filename ? </font>");
@@ -1188,8 +1242,21 @@ void synth1Tab::write_syx_file(QString filename)
 void synth1Tab::filenametext_changed(QString f_name)
 {
     QString filename_nowhite;
-//    filename_nowhite = filenamelineedit->text();
+    QByteArray filename;
+    unsigned int Address;
+    int i;
+    uint8_t regvalue;
     filename_nowhite = f_name;
     filename_nowhite.replace( " ","" );
     filenamelineedit->setText(filename_nowhite);
+//    filenamelineedit->setText(patch_name);                    // common patch name
+    filename = filename_nowhite.toUtf8();
+    i = 0;
+    for(Address =0x290;Address<0x2A0;Address++) { // common patch name
+       if(i <= filename.size()) {
+            regvalue = filename[i++];
+        } else { regvalue = 32; }
+        fpga->SynthregSet(Address,regvalue);
+    }
+    qDebug("filenametext_changed end %u",filename.size());
 }

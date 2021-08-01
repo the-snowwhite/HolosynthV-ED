@@ -9,8 +9,7 @@
 #include "synth1tab.h"
 
 #include <QWidget>
-
-#define SYX_FILE_DIR "/home/holosynth/prg/syx/"
+#include <QSettings>
 
 namespace Ui {
 class MainWindow;
