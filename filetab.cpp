@@ -122,12 +122,9 @@ void fileTab::loadSettings() {
 
     QSettings settings(m_sSettingsFile, QSettings::NativeFormat);
     QString sText = settings.value("text", "").toString();
-    qDebug("in loadSettings(): m_sSettingsFile = %s\n",qUtf8Printable(m_sSettingsFile));
-    qDebug("in loadSettings(): sText = %s\n",qUtf8Printable(sText));
     if (sysexfld)
     {
         sysexfld->setText(sText);
-        qDebug("in loadSettings(): saved to sysexfld -> %s\n",qUtf8Printable(sText));
     }
 }
 void fileTab::saveSettings() {

@@ -9,7 +9,10 @@
 #include "synth1tab.h"
 
 #include <QWidget>
+#include <QTableWidget>
 #include <QSettings>
+
+#define NUM_OSC 8
 
 namespace Ui {
 class MainWindow;

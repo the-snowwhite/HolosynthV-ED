@@ -30,12 +30,17 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
+        MakeEnvs.cpp \
         mainwindow.cpp \
         filetab.cpp \
         keyboard/QKeyPushButton.cpp \
         keyboard/widgetKeyBoard.cpp \
         examplemyfocus.cpp \
         fpgafs.cpp \
+        makeCom.cpp \
+        makeMatrix.cpp \
+        makemainslider.cpp \
+        makeoscs.cpp \
         synthtab.cpp
 
 HEADERS  += mainwindow.h \

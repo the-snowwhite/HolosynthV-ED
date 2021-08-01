@@ -3,8 +3,7 @@
 #include <QFileDialog>
 #include <QVariant>
 #include <qchecklist.h>
-
-#define NUM_OSC 8
+#include <QListWidget>
 
 synth1Tab::synth1Tab(QWidget *parent)
     : QWidget(parent)
@@ -12,249 +11,40 @@ synth1Tab::synth1Tab(QWidget *parent)
     unsigned int i,j;
     fpga = new FPGAFS;
     ftab1 = new fileTab();
-//    fileTab* ftab1 = new fileTab();
+    QFont font8("Times",8);
+    QFont font10("Times",10);
+    QFont font13("Times",13);
+    QFont font16("Times",16);
     // Make main value slider
-    QPalette *p_slider = new QPalette;
-    p_slider->setColor(QPalette::Background,Qt::green);
-    main_slider = new QSlider(Qt::Vertical,this);
-    main_slider->setGeometry(QRect(QPoint(1182,322),QSize(60,300)));
-    aSliderProxy = new SliderProxy;
-    main_slider->setStyle(aSliderProxy);
-    main_slider->setMaximum(127);
-    main_slider->setMinimum(0);
-    main_slider->setPageStep(1);
-    main_slider->setPalette(*p_slider);
-    main_slider->show();
-    main_lcd = new QLCDNumber(this);
-    main_lcd->setGeometry(QRect(QPoint(1185,625),QSize(lcd_width+5,lcd_height)));
-    main_lcd->setDigitCount(3);
-    main_lcd->setSegmentStyle(QLCDNumber::Filled);
-    main_lcd->show();
-    QObject::connect(main_slider,SIGNAL(valueChanged(int)),main_lcd,SLOT(display(int)));
-
+    makeMainslider();
     // Make osc text labels
-    oscLabels <<"osc "<<"  ct"<<"  ft"<<" vol"<<" m_o"<<"fb_o"<<"k_sc"<<" off"<<" pan"<<"b_ct"<<"b_ft"<<"m_in"<<"fb_in";
-    for(i=0;i<13;i++)
-    {
-        osc_label[i] = new QLabel(oscLabels[i],this);
-        osc_label[i]->setGeometry(QRect(QPoint((0+(lcd_width * i)),(0)),QSize(lcd_width,lcd_height)));
-        osc_label[i]->show();
-    }
-    for(i=0;i<NUM_OSC;i++)
-    {
-        osc_num_label[i] = new QLabel(QString::number(i+1),this);
-        osc_num_label[i]->setGeometry(QRect(QPoint(10,(20+(lcd_height*i))),QSize(lcd_width,lcd_height)));
-        osc_num_label[i]->show();
-    }
-
-    // Make osc lcds + selectbuttons and value view regs
-    QPalette *p_osc = new QPalette;
-    p_osc->setColor(QPalette::WindowText,Qt::red);
-    for(j=0;j<NUM_OSC;j++)
-    {
-        for(i = 0;i<12;i++){
-            osc_lcd[i][j] = new QLCDNumber(this);
-            osc_lcd[i][j]->setGeometry(QRect(QPoint((34+(lcd_width * i)),(28 + (lcd_height * j))),QSize(lcd_width,lcd_height)));
-            osc_lcd[i][j]->setDigitCount(3);
-            osc_lcd[i][j]->setSegmentStyle(QLCDNumber::Filled);
-            osc_lcd[i][j]->setPalette(*p_osc);
-            osc_button[i][j] = new QPushButton("" ,this);
-            osc_button[i][j]->setGeometry(QRect(QPoint((34+(lcd_width * i)),(28+ (lcd_height * j))),QSize(lcd_width,lcd_height)));
-            osc_button[i][j]->setFlat(true);
-            QObject::connect(osc_button[i][j],SIGNAL(pressed()),this,SLOT(osc_button_pressed()));
-        }
-    }
-
+    makeOscs();
     // Make matrix text labels
-    matLabels <<" osc "<<"in 1"<<"in 2"<<"in 3"<<"in 4"<<"in 5"<<"in 6"<<"in 7"<<"in 8";
-    for(z=0;z<2;z++)
-    {
-        x_offset = z * 360;
-        xi = z * 8;
-        for(i=0;i<9;i++)
-        {
-            mat_label[i+xi] = new QLabel(matLabels[i],this);
-            mat_label[i+xi]->setGeometry(QRect(QPoint((x_offset + 522+(lcd_width * i)),(0)),QSize(lcd_width,(lcd_height))));
-            mat_label[i+xi]->show();
-        }
-        xy = z * 8;
-        for(i=0;i<NUM_OSC;i++)
-        {
-            mat_num_label[i+xy] = new QLabel(QString::number(i+1)+">",this);
-            mat_num_label[i+xy]->setGeometry(QRect(QPoint(x_offset + 530,(30+(lcd_height*i))),QSize(lcd_width,lcd_height)));
-            mat_num_label[i+xy]->show();
-        }
-        // Make mod and fb matrix lcds and buttons
-        QPalette *p_mat = new QPalette;
-        p_mat->setColor(QPalette::WindowText,Qt::blue);
-        for(j=0;j<NUM_OSC;j++)
-        {
-            for(i = 0;i<NUM_OSC;i++){
-                mat_lcd[i+xy][j] = new QLCDNumber(this);
-                mat_lcd[i+xy][j]->setGeometry(QRect(QPoint((x_offset +550+(lcd_width * i)),(28 + (lcd_height * j))),QSize(lcd_width,lcd_height)));
-                mat_lcd[i+xy][j]->setDigitCount(3);
-                mat_lcd[i+xy][j]->setSegmentStyle(QLCDNumber::Filled);
-                mat_lcd[i+xy][j]->setPalette(*p_mat);
-                mat_button[i+xy][j] = new QPushButton("" ,this);
-                mat_button[i+xy][j]->setGeometry(QRect(QPoint((x_offset +550+(lcd_width * i)),(28+ (lcd_height * j))),QSize(lcd_width,lcd_height)));
-                mat_button[i+xy][j]->setFlat(true);
-                QObject::connect(mat_button[i+xy][j],SIGNAL(pressed()),this,SLOT(mat_button_pressed()));
-            }
-        }
-    }
-
+    makeMatrix();
     // Make Envelope text labels
-    for(j=0;j<9;j++)
-    {
-        p_env[j] = new QPalette;
-        switch (j) {
-        case 0:
-            x_offset = 0; y_offset = 5; z=0; o=0;
-            p_env[j]->setColor(QPalette::WindowText,Qt::green);
-            break;
-        case 1:
-            x_offset = 876; y_offset = 160; z=0; o=8;
-            p_env[j]->setColor(QPalette::WindowText,Qt::black);
-            break;
-        case 2:
-            x_offset = 220; y_offset = 5; z=1; o=0;
-            p_env[j]->setColor(QPalette::WindowText,Qt::blue);
-            break;
-        case 3:
-            x_offset = 440; y_offset = 5; z=2; o=0;
-            p_env[j]->setColor(QPalette::WindowText,Qt::red);
-            break;
-        case 4:
-            x_offset = 660; y_offset = 5; z=3; o=0;
-            p_env[j]->setColor(QPalette::WindowText,Qt::magenta);
-            break;
-        case 5:
-            x_offset = 0; y_offset = 200; z=4; o=0;
-            p_env[j]->setColor(QPalette::WindowText,Qt::green);
-            break;
-        case 6:
-            x_offset = 220; y_offset = 200; z=5; o=0;
-            p_env[j]->setColor(QPalette::WindowText,Qt::blue);
-            break;
-        case 7:
-            x_offset = 440; y_offset = 200; z=6; o=0;
-            p_env[j]->setColor(QPalette::WindowText,Qt::red);
-            break;
-        case 8:
-            x_offset = 660; y_offset = 200; z=7; o=0;
-            p_env[j]->setColor(QPalette::WindowText,Qt::magenta);
-            break;
-        default:
-            break;
-        }
-        envLabels <<"Rate "<<"Level";
-        for(i=0;i<2;i++)
-        {
-            env_label[i][j] = new QLabel(envLabels[i],this);
-            env_label[i][j]->setGeometry(QRect(QPoint(x_offset + 10,(y_offset + 445+(lcd_height*i))),QSize(lcd_width,lcd_height)));
-            env_label[i][j]->show();
-        }
-        for(i=0;i<4;i++)
-        {
-            env_num_label[i][j] = new QLabel(QString::number(i+1),this);
-            env_num_label[i][j]->setGeometry(QRect(QPoint((x_offset + 70+(lcd_width * i)),(y_offset + 420)),QSize(lcd_width,(lcd_height))));
-            env_num_label[i][j]->show();
-        }
-
-        // Make Envelope lcd's and select buttons
-        for(xi=0;xi<2;xi++)
-        {
-            for(i = 0;i<4;i++){
-                env_lcd[(o+i+(xi*4))][z] = new QLCDNumber(this);
-                env_lcd[(o+i+(xi*4))][z]->setGeometry(QRect(QPoint((x_offset + 50+(lcd_width * i)),(y_offset + 445 + (lcd_height * xi))),QSize(lcd_width,lcd_height)));
-                env_lcd[(o+i+(xi*4))][z]->setDigitCount(3);
-                env_lcd[(o+i+(xi*4))][z]->setSegmentStyle(QLCDNumber::Filled);
-                env_lcd[(o+i+(xi*4))][z]->setPalette(*p_env[j]);
-                env_button[(o+i+(xi*4))][z] = new QPushButton("" ,this);
-                env_button[(o+i+(xi*4))][z]->setGeometry(QRect(QPoint((x_offset + 50+(lcd_width * i)),(y_offset + 445+ (lcd_height * xi))),QSize(lcd_width,lcd_height)));
-                env_button[(o+i+(xi*4))][z]->setFlat(true);
-                QObject::connect(env_button[(o+i+(xi*4))][z],SIGNAL(pressed()),this,SLOT(env_button_pressed()));
-            }
-        }
-    }
-
-    // Make Envelope qwt display
-    for(i=0;i<9;i++)
-    {
-        qwtPlotenv[i] = new QwtPlot(this);
-        curve[i] = new QwtPlotCurve();
-        curve[i]->setRenderHint( QwtPlotItem::RenderAntialiased, true );
-        symbol[i] = new QwtSymbol( QwtSymbol::Ellipse,
-                                   QBrush( Qt::yellow ), QPen( Qt::red, 2 ), QSize( 8, 8 ) );
-        curve[i]->setSymbol( symbol[i] );
-        points[i] << QPointF(0, 0 ) << QPointF( 0, 0 ) << QPointF( 0, 0 )
-                  << QPointF( 0 , 127) << QPointF( 0 , 0 );
-        curve[i]->setSamples( points[i] );
-        curve[i]->attach( qwtPlotenv[i] );
-        qwtPlotenv[i]->setAxisScale(QwtPlot::yLeft,0,127,0);
-        qwtPlotenv[i]->setAxisScale(QwtPlot::xBottom ,0,508,0);
-        qwtPlotenv[i]->enableAxis(QwtPlot::xBottom,false);
-        qwtPlotenv[i]->enableAxis(QwtPlot::yLeft,false);
-        qwtPlotenv[i]->show();
-    }
-    curve[0]->setPen( Qt::green, 4 );
-    curve[1]->setPen( Qt::black, 4 );
-    curve[2]->setPen( Qt::blue, 4 );
-    curve[3]->setPen( Qt::red, 4 );
-    curve[4]->setPen( Qt::magenta, 4 );
-    curve[5]->setPen( Qt::green, 4 );
-    curve[6]->setPen( Qt::blue, 4 );
-    curve[7]->setPen( Qt::red, 4 );
-    curve[8]->setPen( Qt::magenta, 4 );
-    qwtPlotenv[0]->setGeometry(QRect(QPoint(10,330),QSize(200,100)));
-    qwtPlotenv[1]->setGeometry(QRect(QPoint(890,480),QSize(200,100)));
-    qwtPlotenv[2]->setGeometry(QRect(QPoint(230,330),QSize(200,100)));
-    qwtPlotenv[3]->setGeometry(QRect(QPoint(450,330),QSize(200,100)));
-    qwtPlotenv[4]->setGeometry(QRect(QPoint(670,330),QSize(200,100)));
-    qwtPlotenv[5]->setGeometry(QRect(QPoint(10,520),QSize(200,100)));
-    qwtPlotenv[6]->setGeometry(QRect(QPoint(230,520),QSize(200,100)));
-    qwtPlotenv[7]->setGeometry(QRect(QPoint(450,520),QSize(200,100)));
-    qwtPlotenv[8]->setGeometry(QRect(QPoint(670,520),QSize(200,100)));
-
+    makeEnvs();
     // Make com text labels
-    comLabels <<"  pb \nrange"<<"main \n  vol"<<"midi \n  ch "<<" vel\nscale"<<" osc  \nindex" <<" dev \n  id " << " oc\ntave";
-    for(i=0;i<7;i++)
-    {
-        com_label[i] = new QLabel(comLabels[i],this);
-        com_label[i]->setGeometry(QRect(QPoint((892+(lcd_width * i)),(380)),QSize(lcd_width,(lcd_height+15))));
-        com_label[i]->show();
-    }
-    // Make com lcds + selectbuttons and value view regs
-    p_com = new QPalette;
-    p_com->setColor(QPalette::WindowText,Qt::black);
-//    p_com->setColor(QPalette::Window ,Qt::darkGray);
-    for(i = 0;i<7;i++){
-        com_lcd[i] = new QLCDNumber(this);
-        com_lcd[i]->setGeometry(QRect(QPoint((890+(lcd_width * i)),422 ),QSize(lcd_width,lcd_height)));
-        com_lcd[i]->setDigitCount(3);
-        com_lcd[i]->setSegmentStyle(QLCDNumber::Filled);
-        com_lcd[i]->setPalette(*p_com);
-        com_button[i] = new QPushButton("" ,this);
-        com_button[i]->setGeometry(QRect(QPoint((890+(lcd_width * i)),422),QSize(lcd_width,lcd_height)));
-        com_button[i]->setFlat(true);
-        QObject::connect(com_button[i],SIGNAL(pressed()),this,SLOT(com_button_pressed()));
-    }
+    makeCom();
 
     midiexternCheckBox = new QCheckBox("Hw Midi In",this);
-    midiexternCheckBox->setGeometry(QRect(QPoint(970,450),QSize(120,35)));
+    midiexternCheckBox->setGeometry(QRect(QPoint(890,450),QSize(150,35)));
     QObject::connect(midiexternCheckBox,SIGNAL(pressed()),this,SLOT(midi_intern_pressed()));
     midiexternCheckBox->show();
 
-    QObject::connect(main_slider,SIGNAL(valueChanged(int)),this,SLOT(main_slider_val_change(int)));
+    keyboard2openbutton = new QPushButton("key open",this);
+    keyboard2openbutton->setGeometry(QRect(QPoint(1190, 325),QSize(button_width, button_height)));
+    QObject::connect(keyboard2openbutton,SIGNAL(pressed()),this,SLOT(on_keyboard2openbutton_pressed()));
+    keyboard2closebutton = new QPushButton("key end",this);
+    keyboard2closebutton->setGeometry(QRect(QPoint(1190, 365),QSize(button_width, button_height)));
+    QObject::connect(keyboard2closebutton,SIGNAL(pressed()),this,SLOT(on_keyboard2closebutton_pressed()));
 
-    synthtolcdbutton = new QPushButton("Read",this);
-    synthtolcdbutton->setGeometry(QRect(QPoint(1170 , 660),QSize(button_width, button_height)));
+
+    QObject::connect(main_slider,SIGNAL(valueChanged(int)),this,SLOT(main_slider_val_change(int)));
     QObject::connect(synthtolcdbutton,SIGNAL(pressed()),this,SLOT(synthtolcd()));
 
     filenamelineedit = new QLineEdit(this);
     filenamelineedit->setGeometry(QRect(QPoint(895, 325),QSize(280, 50)));
-    QFont font2("Times",16);
-    filenamelineedit->setFont(font2);
+    filenamelineedit->setFont(font16);
     filenamelineedit->setMaxLength(16);
     QObject::connect(filenamelineedit,SIGNAL(textChanged(QString)),this,SLOT(filenametext_changed(QString)));
 
@@ -265,20 +55,43 @@ synth1Tab::synth1Tab(QWidget *parent)
         synthtolcd();
     }
     folderbox = new QCheckList(this);
-    folderbox->setGeometry(QRect(QPoint(885,275),QSize(100,35)));
-    QFont font1("Times",13);
-    folderbox->setFont(font1);
+    folderbox->setFont(font10);
     populate_folderbox();
-    QObject::connect(folderbox,SIGNAL(activated(QString)),this,SLOT(on_folderbox_activated(QString)));
 
-    folderbox->setStyleSheet(" QComboBox { border: 1px solid gray;"
-                               "border-radius: 3px; padding: 1px 48px 1px 3px; min-width: 6em; }"
+    folderbox->setStyleSheet(" QCheckList { border: 1px solid gray;"
+                               "border-radius: 3px; padding: 1px 8px 1px 3px; min-width: 6em;}"
                                "QScrollBar:vertical {border: 1px solid black; background:green; width:60px; margin: 0px 0px 0px 0px; }"
                                );
+    folderbox->setGeometry(QRect(QPoint(885,275),QSize(100,35)));
+    QObject::connect(folderbox,SIGNAL(activated(QString)),this,SLOT(on_folderbox_activated(QString)));
+
+    f_label = new QLabel("   Patch Groups",this);
+    f_label->setGeometry(QRect(QPoint(1090,457),QSize(170,25)));
+    f_label->setAutoFillBackground(true);
+    f_label->setStyleSheet("QLabel {"
+    "border-style: solid;"
+    "border-width: 1px;"
+    "border-color: black; "
+    "background-color:WhiteSmoke; "
+    "}");
+
+    folderlistbox = new QListWidget(this);
+    folderlistbox->setFont(font8);
+    folderlistbox->setAutoFillBackground(true);
+    folderlistbox->setStyleSheet("background-color:WhiteSmoke;");
+    populate_folderlistbox();
+    folderlistbox->setGeometry(QRect(QPoint(1090,480),QSize(170,200)));
+    QStringList folderlist;
+
+//    QObject::connect(folderlistbox, SIGNAL(itemChanged(QListWidgetItem*)),
+    QObject::connect(folderlistbox, SIGNAL(itemClicked(QListWidgetItem*)),
+                     this, SLOT(highlightChecked(QListWidgetItem*)));
+//   QObject::connect(folderlistbox,SIGNAL(itemPressed(QListWidgetItem)),this,SLOT(on_folderlistbox_statechanged(QListWidgetItem*)));
+
+
     fileloadbox = new QComboBox(this);
     fileloadbox->setGeometry(QRect(QPoint(1030,275),QSize(205,35)));
-//    QFont font1("Times",16);
-    fileloadbox->setFont(font1);
+    fileloadbox->setFont(font13);
     populate_fileloadbox();
     QObject::connect(fileloadbox,SIGNAL(activated(QString)),this,SLOT(on_fileloadbox_activated(QString)));
 
@@ -293,12 +106,6 @@ synth1Tab::synth1Tab(QWidget *parent)
         QObject::connect(presetbutton[i],SIGNAL(pressed()),this,SLOT(preset_pressed()));
         QObject::connect(presetbutton[i],SIGNAL(released()),this,SLOT(preset_released()));
     }
-    keyboard2openbutton = new QPushButton("key open",this);
-    keyboard2openbutton->setGeometry(QRect(QPoint(1090, 495),QSize(button_width, button_height)));
-    QObject::connect(keyboard2openbutton,SIGNAL(pressed()),this,SLOT(on_keyboard2openbutton_pressed()));
-    keyboard2closebutton = new QPushButton("key end",this);
-    keyboard2closebutton->setGeometry(QRect(QPoint(1090, 535),QSize(button_width, button_height)));
-    QObject::connect(keyboard2closebutton,SIGNAL(pressed()),this,SLOT(on_keyboard2closebutton_pressed()));
     presetlistenCheckBox = new QCheckBox("Preset Listen",this);
     presetlistenCheckBox->setGeometry(QRect(QPoint(885,680),QSize(150,25)));
     presetlistenCheckBox->show();
@@ -636,11 +443,24 @@ void synth1Tab::setLCD(unsigned int RegAddress, u_int8_t newValue)
 
 void synth1Tab::populate_folderbox()
 {
-    QStringList nameFilter("*.syx");
     QDir directory(ftab1->sysexfld->text());
     QStringList syxFilesAndDirectories = directory.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
     folderbox->clear();
     folderbox->addItems(syxFilesAndDirectories);
+}
+
+void synth1Tab::populate_folderlistbox()
+{
+    QDir directory(ftab1->sysexfld->text());
+    QStringList syxFilesAndDirectories = directory.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
+    folderlistbox->clear();
+    folderlistbox->addItems(syxFilesAndDirectories);
+    QListWidgetItem* item = 0;
+    for(int i = 0; i < folderlistbox->count(); ++i){
+        item = folderlistbox->item(i);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState(Qt::Unchecked);
+    }
 }
 
 void synth1Tab::populate_fileloadbox()
@@ -661,7 +481,7 @@ void synth1Tab::populate_fileloadbox()
 
 void synth1Tab::on_fileloadbox_activated(const QString &file)
 {
-    qDebug("on_fileloadbox_activated");
+    qDebug("on_fileloadbox_activated with file %s",qUtf8Printable(file));
 //    fileTab *ftab1 = new fileTab();
 //    ftab1->display->append(file);
     patch_name.clear();
@@ -672,12 +492,22 @@ void synth1Tab::on_fileloadbox_activated(const QString &file)
 
 void synth1Tab::on_folderbox_activated(const QString &dir)
 {
-//    fileTab *ftab1 = new fileTab();
-//    ftab1->display->append(dir);
-//    patch_name.clear();
-//    readSyxFile(SYX_FILE_DIR + file);
+    qDebug("Input Dir = %s",qUtf8Printable(dir));
+    qDebug("globalCheckstate = %d",folderbox->globalCheckState());
+    for(int loop1 = 0; loop1 < folderbox->listChecked().size(); loop1++) {
+        qDebug("Dir's = %s",qUtf8Printable(folderbox->listChecked().at(loop1)));
+    }
 }
-
+/*
+void synth1Tab::on_folderlistbox_statechanged(const QListWidgetItem &item)
+{
+//    qDebug("folderlist state = %s",item);
+    for(int loop1 = 0; loop1 < folderbox->listChecked().size(); loop1++) {
+//        qDebug("Input Dir's = %s",qUtf8Printable(dirs.at(loop1)));
+       qDebug("Dir's = %s",qUtf8Printable(folderbox->listChecked().at(loop1)));
+    }
+}
+*/
 void synth1Tab::preset_pressed()
 {
     unsigned int r, size;
@@ -1259,4 +1089,21 @@ void synth1Tab::filenametext_changed(QString f_name)
         fpga->SynthregSet(Address,regvalue);
     }
     qDebug("filenametext_changed end %u",filename.size());
+}
+
+void synth1Tab::highlightChecked(QListWidgetItem *item){
+    if(item->checkState() == Qt::Checked){
+        item->setBackground(QColor("#33ff00"));//QColor("#ffffb2")
+        folderlist.append(item->text());
+        for(int loop1 = 0; loop1 < folderlist.size(); loop1++) {
+            qDebug("folderlist %d is now = %s",loop1,qUtf8Printable(folderlist.at(loop1)));
+        }
+    }
+    else {
+        item->setBackground(QColor("#ffffff"));
+        folderlist.removeAll(item->text());
+        for(int loop1 = 0; loop1 < folderlist.size(); loop1++) {
+            qDebug("folderlist %d is now = %s",loop1,qUtf8Printable(folderlist.at(loop1)));
+        }
+    }
 }

@@ -26,6 +26,8 @@
 #include <QWidget>
 #include "keyboard/widgetKeyBoard.h"
 #include "examplemyfocus.h"
+#include <qchecklist.h>
+#include <QListWidget>
 
 #define lcd_width 40
 #define lcd_height 30
@@ -46,6 +48,7 @@ public:
     SliderProxy * aSliderProxy;
     QLabel *osc_label[13];
     QLabel *osc_num_label[8];
+    QLabel *f_label;
     QPushButton *osc_button[12][8];
     QStringList oscLabels;
     QLCDNumber *osc_lcd[12][8];
@@ -69,7 +72,8 @@ public:
     QStringList comLabels;
     QLCDNumber *com_lcd[7];
 
-    QComboBox *folderbox;
+    QCheckList *folderbox;
+    QListWidget *folderlistbox;
     QComboBox *fileloadbox;
     QPushButton *synthtolcdbutton;
 
@@ -97,6 +101,8 @@ public:
 
    QPushButton *renamebutton;
 
+   QStringList folderlist;
+
     int Addressreg_x,Addressreg_y;
     int val;
     int xi, xy, z, o;
@@ -111,6 +117,11 @@ signals:
     void keyboard_hide(void);
 
 public slots:
+    void makeMainslider(void);
+    void makeOscs(void);
+    void makeMatrix(void);
+    void makeEnvs(void);
+    void makeCom(void);
     void synthtolcd(void);
     void setEnvPlot(int envNr);
     void osc_button_pressed(void);
@@ -121,7 +132,9 @@ public slots:
     void main_slider_val_change(int value);
     void setLCD(unsigned int RegAddress, u_int8_t newValue);
     void populate_folderbox();
-    void on_folderbox_activated(const QString &file);
+    void populate_folderlistbox();
+    void on_folderbox_activated(const QString &dir);
+//    void on_folderlistbox_statechanged(const QListWidgetItem &item);
     void populate_fileloadbox();
     void on_fileloadbox_activated(const QString &file);
     void preset_pressed(void);
@@ -138,6 +151,7 @@ public slots:
 
     void on_keyboard2openbutton_pressed();
     void on_keyboard2closebutton_pressed();
+    void highlightChecked(QListWidgetItem *item);
 
 private:
     QLCDNumber *main_lcd;
@@ -146,7 +160,6 @@ private:
     QPolygonF points[9];
     QwtPlot *qwtPlotenv[9];
     QByteArray Buffer;
-
 //    u_int8_t regvalue;
 
 };

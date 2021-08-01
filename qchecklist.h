@@ -134,6 +134,26 @@ public:
         return nbChecked == nbRows ? Qt::Checked : nbUnchecked == nbRows ? Qt::Unchecked : Qt::PartiallyChecked;
     }
 
+    QStringList listChecked()
+    {
+        int nbRows = m_model->rowCount();
+        QStringList list;
+        if (nbRows == 0)
+        {
+            return list;
+        }
+
+        for (int i = 0; i < nbRows; i++)
+        {
+            if (m_model->item(i)->checkState() == Qt::Checked)
+            {
+                list.append(this->itemText(i));
+            }
+        }
+
+        return list;
+    }
+
 protected:
     bool eventFilter(QObject* _object, QEvent* _event)
     {
