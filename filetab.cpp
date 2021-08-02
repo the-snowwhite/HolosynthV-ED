@@ -10,8 +10,8 @@ static const char *default_config_filename = "/default_holosynthv";
 fileTab::fileTab(QWidget *parent)
     : QWidget(parent)
 {
+    qDebug("---\n@fileTab: Start\n");
     QString appDataLocation;
-//    fpga = new FPGAFS;
     closebutton = new QPushButton("Quit",this);
     fileopenbutton = new QPushButton("Open",this);
     keyboardopenbutton = new QPushButton("key open",this);
@@ -33,6 +33,7 @@ fileTab::fileTab(QWidget *parent)
 
     sysexfld = new QLineEdit(this);
     sysexfld->setPlaceholderText("Top Sysex Patch folder");
+//    QStringList bankfolderlist;
     display = new QTextEdit(this);
 //    display->setGeometry(QRect(QPoint(10, 150),QSize(400, 400)));
     QGroupBox *botGroup = new QGroupBox();
@@ -49,18 +50,6 @@ fileTab::fileTab(QWidget *parent)
     this->myKeyboard->enableSwitchingEcho(false); // enable possibility to change echo through keyboard
     this->myKeyboard->createKeyboard(); // only create keyboard
 
-    QObject::connect(closebutton, SIGNAL(pressed()) , this , SLOT(on_closebutton_pressed()));
-    QObject::connect(fileopenbutton,SIGNAL(pressed()),this,SLOT(open_file_dialog()));
-    QObject::connect(keyboardopenbutton,SIGNAL(pressed()),this,SLOT(on_keyboardopenbutton_pressed()));
-    QObject::connect(keyboardclosebutton,SIGNAL(pressed()),this,SLOT(on_keyboardclosebutton_pressed()));
-    QObject::connect(sdirbutton, SIGNAL(pressed()) , this , SLOT(on_sdirbutton_pressed()));
-    QObject::connect(myKeyboard,SIGNAL(return_touched()),this,SIGNAL(key_return_touched()));
-    QGridLayout *layout = new QGridLayout;
-    layout->addWidget(topGroup, 0, 0);
-    layout->addWidget(botGroup, 1, 0);
-    layout->setAlignment(Qt::AlignTop);
-    setLayout(layout);
-
     appDataLocation = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
     if (appDataLocation.isEmpty())
         QMessageBox::information(this, tr("Error"), tr("Can't retrieve standard folder location"));
@@ -70,9 +59,23 @@ fileTab::fileTab(QWidget *parent)
 
         QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, appDataLocation);
     }
-
     loadSettings();
- //   settings = new QSettings(QSettings::IniFormat, QSettings::UserScope, "HolosynthVED", "", this);
+
+    QObject::connect(closebutton, SIGNAL(pressed()) , this , SLOT(on_closebutton_pressed()));
+    QObject::connect(fileopenbutton,SIGNAL(pressed()),this,SLOT(open_file_dialog()));
+    QObject::connect(keyboardopenbutton,SIGNAL(pressed()),this,SLOT(on_keyboardopenbutton_pressed()));
+    QObject::connect(keyboardclosebutton,SIGNAL(pressed()),this,SLOT(on_keyboardclosebutton_pressed()));
+    QObject::connect(sdirbutton, SIGNAL(pressed()) , this , SLOT(on_sdirbutton_pressed()));
+    QObject::connect(myKeyboard,SIGNAL(return_touched()),this,SIGNAL(key_return_touched()));
+    QObject::connect(sysexfld,SIGNAL(textChanged(QString)),this,SLOT(saveSettings(QString)));
+
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->addWidget(topGroup);
+    layout->addWidget(botGroup);
+    layout->setAlignment(Qt::AlignTop);
+    layout->addStretch(1);
+    setLayout(layout);
+    qDebug("---\n@fileTab: End\n");
 }
 fileTab::~fileTab()
 {
@@ -92,7 +95,7 @@ void fileTab::on_sdirbutton_pressed()
     QString homedirpath = QDir::homePath();
     QString dirname = flddialog->getExistingDirectory(this,tr("Open Folder", homedirpath.toStdString().c_str(), QFileDialog::DontUseNativeDialog));
     sysexfld->setText(dirname);
-    saveSettings();
+    saveSettings(dirname);
 }
 
 void fileTab::on_keyboardopenbutton_pressed()
@@ -117,28 +120,31 @@ void fileTab::open_file_dialog()
 //    readSyxFile(filename);
 }
 
-
 void fileTab::loadSettings() {
 
     QSettings settings(m_sSettingsFile, QSettings::NativeFormat);
-    QString sText = settings.value("text", "").toString();
-    if (sysexfld)
-    {
+    QString sText = settings.value("sysexroot", "").toString();
+    qDebug() << "loadsettings sText = " << sText;
+    sysexrootfolder = sText;
+    if (sysexfld) {
         sysexfld->setText(sText);
+        qDebug() << "loadsettings set filetab->sysexfld->setText(sText)";
     }
+    bankfolderlist = settings.value("bankfolderlist").toStringList();
+    qDebug() << "set: bankfolderlist = " << bankfolderlist;
 }
-void fileTab::saveSettings() {
+void fileTab::saveSettings(QString f_name) {
 
     QSettings settings(m_sSettingsFile, QSettings::NativeFormat);
     QString sText = (sysexfld) ? sysexfld->text() : "";
-    qDebug("in saveSettings(): sText = %s\n",qUtf8Printable(sText));
-    settings.setValue("text", sText);
+    settings.setValue("sysexroot", sText);
     if (sysexfld)
     {
         sysexfld->setText(sText);
     }
+    settings.setValue("bankfolderlist", QVariant::fromValue(bankfolderlist));
+    qDebug("ran saveSettings()");
 }
-
 
 /*
 void fileTab::saveSyxFile(QString filename)

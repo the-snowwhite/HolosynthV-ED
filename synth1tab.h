@@ -31,6 +31,10 @@
 
 #define lcd_width 40
 #define lcd_height 30
+namespace Ui {
+class synth1Tab;
+}
+
 
 class synth1Tab : public QWidget
 {
@@ -39,7 +43,7 @@ class synth1Tab : public QWidget
 public:
    explicit  synth1Tab(QWidget *parent = 0);
     FPGAFS *fpga;
-    fileTab * ftab1;
+   fileTab * ftab1;
 
 //    widgetKeyBoard  *myKeyboard2;
     QLineEdit *filenamelineedit;
@@ -101,8 +105,6 @@ public:
 
    QPushButton *renamebutton;
 
-   QStringList folderlist;
-
     int Addressreg_x,Addressreg_y;
     int val;
     int xi, xy, z, o;
@@ -134,7 +136,6 @@ public slots:
     void populate_folderbox();
     void populate_folderlistbox();
     void on_folderbox_activated(const QString &dir);
-//    void on_folderlistbox_statechanged(const QListWidgetItem &item);
     void populate_fileloadbox();
     void on_fileloadbox_activated(const QString &file);
     void preset_pressed(void);
