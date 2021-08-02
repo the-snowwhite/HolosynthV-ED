@@ -26,9 +26,15 @@
 #include <QWidget>
 #include "keyboard/widgetKeyBoard.h"
 #include "examplemyfocus.h"
+#include <qchecklist.h>
+#include <QListWidget>
 
 #define lcd_width 40
 #define lcd_height 30
+namespace Ui {
+class synth1Tab;
+}
+
 
 class synth1Tab : public QWidget
 {
@@ -37,7 +43,7 @@ class synth1Tab : public QWidget
 public:
    explicit  synth1Tab(QWidget *parent = 0);
     FPGAFS *fpga;
-//    fileTab * ftab1;
+   fileTab * ftab1;
 
 //    widgetKeyBoard  *myKeyboard2;
     QLineEdit *filenamelineedit;
@@ -46,6 +52,7 @@ public:
     SliderProxy * aSliderProxy;
     QLabel *osc_label[13];
     QLabel *osc_num_label[8];
+    QLabel *f_label;
     QPushButton *osc_button[12][8];
     QStringList oscLabels;
     QLCDNumber *osc_lcd[12][8];
@@ -69,6 +76,8 @@ public:
     QStringList comLabels;
     QLCDNumber *com_lcd[7];
 
+    QCheckList *folderbox;
+    QListWidget *folderlistbox;
     QComboBox *fileloadbox;
     QPushButton *synthtolcdbutton;
 
@@ -110,6 +119,11 @@ signals:
     void keyboard_hide(void);
 
 public slots:
+    void makeMainslider(void);
+    void makeOscs(void);
+    void makeMatrix(void);
+    void makeEnvs(void);
+    void makeCom(void);
     void synthtolcd(void);
     void setEnvPlot(int envNr);
     void osc_button_pressed(void);
@@ -119,6 +133,9 @@ public slots:
     void midi_intern_pressed(void);
     void main_slider_val_change(int value);
     void setLCD(unsigned int RegAddress, u_int8_t newValue);
+    void populate_folderbox();
+    void populate_folderlistbox();
+    void on_folderbox_activated(const QString &dir);
     void populate_fileloadbox();
     void on_fileloadbox_activated(const QString &file);
     void preset_pressed(void);
@@ -135,6 +152,7 @@ public slots:
 
     void on_keyboard2openbutton_pressed();
     void on_keyboard2closebutton_pressed();
+    void highlightChecked(QListWidgetItem *item);
 
 private:
     QLCDNumber *main_lcd;
@@ -143,7 +161,6 @@ private:
     QPolygonF points[9];
     QwtPlot *qwtPlotenv[9];
     QByteArray Buffer;
-
 //    u_int8_t regvalue;
 
 };

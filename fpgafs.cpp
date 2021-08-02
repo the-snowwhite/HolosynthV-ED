@@ -12,24 +12,9 @@
 #include <stdint.h>
 
 #include <dirent.h> 
-//#include <sys/ioctl.h>
-//#include <linux/i2c-dev.h>
-//#include <fcntl.h>
-
-
-//#include "socal/socal.h"
-//#include "socal/hps.h"
-//#include "socal/alt_gpio.h"
-
-// ///////////////////////////////////////// memory map
-
-//#define HW_REGS_BASE ( ALT_STM_OFST )
 #define HW_REGS_SPAN ( 4096 )
-//#define FILE_DEV "/dev/uio0"
-#define FILE_DEV "/dev/uio1"
 
 FPGAFS::FPGAFS()// :
-//    m_bIsVideoEnabled(false)
 {
     m_bInitSuccess = Init();
     if (!m_bInitSuccess )
@@ -45,6 +30,7 @@ FPGAFS::~FPGAFS()
 
 bool FPGAFS::Init()
 {
+    qDebug("---\n@FPGAFS: Start\n");
     bool bSuccess = true;
     // Open /dev/uio0
     char buf[1024],str[32], uio_dev[16];
@@ -61,10 +47,9 @@ bool FPGAFS::Init()
                     buf[len] = '\0';
                 }
                 if(strstr(buf,"a0040000.hm2_axilite_int") || strstr(buf,"ff240000.holosynth_sysex") != NULL) {
-                    qDebug() << "\n Found string in " << dir->d_name << "\n";
                     sprintf(uio_dev, "/dev/%s", dir->d_name);
-                    qDebug() << buf << "\n\n";
-                    qDebug() << uio_dev << "\n";
+                    qDebug() << "Found string in: " << uio_dev;
+                    qDebug() << buf;
                 }
             }
         }
@@ -82,6 +67,7 @@ bool FPGAFS::Init()
         close ( fd );
     }
     uio_mem_addr=(uint32_t *)virtual_base;
+    qDebug("---\n@FPGAFS: End\n");
     return bSuccess;
 }
 

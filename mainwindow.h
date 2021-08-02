@@ -9,6 +9,11 @@
 #include "synth1tab.h"
 
 #include <QWidget>
+#include <QTableWidget>
+#include <QSettings>
+
+#define NUM_OSC 8
+
 
 namespace Ui {
 class MainWindow;
@@ -21,9 +26,9 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    QTabWidget* mytabWidget;
-    fileTab* ftab1;
-    synth1Tab* stab1;
+    QTabWidget* tabWidget;
+    fileTab* filetab;
+    synth1Tab* synthtab;
 public slots:
     void quit();
 
