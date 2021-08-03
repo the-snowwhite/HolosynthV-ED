@@ -10,7 +10,7 @@ static const char *default_config_filename = "/default_holosynthv";
 fileTab::fileTab(QWidget *parent)
     : QWidget(parent)
 {
-    qDebug("---\n@fileTab: Start\n");
+    qDebug("---> @fileTab: Start");
     QString appDataLocation;
     closebutton = new QPushButton("Quit",this);
     fileopenbutton = new QPushButton("Open",this);
@@ -75,7 +75,7 @@ fileTab::fileTab(QWidget *parent)
     layout->setAlignment(Qt::AlignTop);
     layout->addStretch(1);
     setLayout(layout);
-    qDebug("---\n@fileTab: End\n");
+    qDebug("---> @fileTab: End");
 }
 fileTab::~fileTab()
 {
@@ -124,14 +124,13 @@ void fileTab::loadSettings() {
 
     QSettings settings(m_sSettingsFile, QSettings::NativeFormat);
     QString sText = settings.value("sysexroot", "").toString();
-    qDebug() << "loadsettings sText = " << sText;
+    qDebug() << "---> @loadsettings sysexroot = " << sText;
     sysexrootfolder = sText;
     if (sysexfld) {
         sysexfld->setText(sText);
-        qDebug() << "loadsettings set filetab->sysexfld->setText(sText)";
     }
     bankfolderlist = settings.value("bankfolderlist").toStringList();
-    qDebug() << "set: bankfolderlist = " << bankfolderlist;
+    qDebug() << "---> @loadsettings-> bankfolderlist = " << bankfolderlist;
 }
 void fileTab::saveSettings(QString f_name) {
 
@@ -143,7 +142,7 @@ void fileTab::saveSettings(QString f_name) {
         sysexfld->setText(sText);
     }
     settings.setValue("bankfolderlist", QVariant::fromValue(bankfolderlist));
-    qDebug("ran saveSettings()");
+    qDebug("---> @saveSettings() end");
 }
 
 /*

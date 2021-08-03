@@ -41,9 +41,9 @@ class synth1Tab : public QWidget
     Q_OBJECT
 
 public:
-   explicit  synth1Tab(QWidget *parent = 0);
+   explicit  synth1Tab(fileTab *filetab, QWidget *parent = 0);
     FPGAFS *fpga;
-   fileTab * ftab1;
+    fileTab *ftab1;
 
 //    widgetKeyBoard  *myKeyboard2;
     QLineEdit *filenamelineedit;

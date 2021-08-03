@@ -5,12 +5,13 @@
 #include <qchecklist.h>
 #include <QListWidget>
 
-synth1Tab::synth1Tab(QWidget *parent)
+synth1Tab::synth1Tab(fileTab *filetab, QWidget *parent)
     : QWidget(parent)
 {
-    qDebug("---\n@synth1Tab: Start\n");
+    qDebug("---> @synth1Tab: Start");
     fpga = new FPGAFS;
-    ftab1 = new fileTab();
+    //    ftab1 = new fileTab();
+    ftab1 = filetab;
     qDebug() << "QDir = " << ftab1->sysexfld->text();
 
     QFont font8("Times",8);
@@ -29,7 +30,7 @@ synth1Tab::synth1Tab(QWidget *parent)
     makeCom();
     // init slider:
     Addressreg_x = 0; Addressreg_y = 8;
-    val = osc_lcd[0][8]->value();
+    val = osc_lcd[0][0]->value();
     main_slider->setRange(-64,63);
     main_slider->setValue(val);
 
@@ -116,7 +117,7 @@ synth1Tab::synth1Tab(QWidget *parent)
     presetlistenCheckBox = new QCheckBox("Preset Listen",this);
     presetlistenCheckBox->setGeometry(QRect(QPoint(885,680),QSize(150,25)));
     presetlistenCheckBox->show();
-    qDebug("---\n@synth2Tab: End\n");
+    qDebug("---> @synth2Tab: End");
 } // synth1Tab::synth1Tab()  end
 
 void synth1Tab::synthtolcd()
@@ -440,7 +441,7 @@ void synth1Tab::setLCD(unsigned int RegAddress, u_int8_t newValue)
     {
         if(RegAddress == 0x290) patch_name.clear();
         patch_name.append((char) newValue);
-        qDebug("Text: newValue = %s @ Address 0x%x",(const char *)&newValue,RegAddress);
+ //       qDebug("Text: newValue = %s @ Address 0x%x",(const char *)&newValue,RegAddress);
         if(RegAddress == 0x29F) {
            filenamelineedit->clear();
            filenamelineedit->setText(patch_name);
@@ -462,16 +463,16 @@ void synth1Tab::populate_folderbox()
 
 void synth1Tab::populate_folderlistbox()
 {
-    qDebug() << "Now in populate_folderlistbox";
-    qDebug() << "QDir = " <<  ftab1->sysexrootfolder;//  fileTab(0).sysexfld->text();
-    qDebug() << "QDir = " <<  ftab1->sysexfld->text();
+//    qDebug() << "Now in populate_folderlistbox";
+//    qDebug() << "QDir = " <<  ftab1->sysexrootfolder;//  fileTab(0).sysexfld->text();
+//    qDebug() << "QDir = " <<  ftab1->sysexfld->text();
     QDir directory(ftab1->sysexrootfolder);
     QStringList syxDirectories = directory.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
     folderlistbox->clear();
     folderlistbox->addItems(syxDirectories);
 //    ftab1->bankfolderlist = syxDirectories;
     QListWidgetItem* item = 0;
-    qDebug() << "bankfolderlist contents = " << ftab1->bankfolderlist;
+//    qDebug() << "bankfolderlist contents = " << ftab1->bankfolderlist;
     for(int i = 0; i < folderlistbox->count(); ++i){
         item = folderlistbox->item(i);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
@@ -485,7 +486,7 @@ void synth1Tab::populate_folderlistbox()
 
 void synth1Tab::populate_fileloadbox()
 {
-    qDebug("@ populate_fileloadbox");
+//    qDebug("@ populate_fileloadbox");
     QStringList nameFilter("*.syx");
     QStringList filelist;
     fileloadbox->clear();
