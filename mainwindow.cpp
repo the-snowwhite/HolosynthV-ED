@@ -4,13 +4,13 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    qDebug("---\n@MainWindow: Start\n");
+    qDebug("---> @MainWindow: Start");
     this->setFixedSize(1366,768);// fix windows size
     tabWidget = new QTabWidget(this);
     filetab = new fileTab();
-    qDebug("---\n@MainWindow: post new filetab\n");
-    synthtab = new synth1Tab();
-    qDebug("---\n@MainWindow: post new synthtab\n");
+    qDebug("---> @MainWindow: post new filetab");
+    synthtab = new synth1Tab(filetab);
+    qDebug("---> @MainWindow: post new synthtab");
 
     tabWidget->addTab(filetab, tr("File Actions"));
     tabWidget->addTab(synthtab, tr("Synth1"));
@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     tabWidget->setCurrentIndex(1);
-    qDebug("---\n@MainWindow: end");
+    qDebug("---> @MainWindow: end");
  //   tabWidget->show();
 }
 

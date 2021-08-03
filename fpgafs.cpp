@@ -16,11 +16,13 @@
 
 FPGAFS::FPGAFS()// :
 {
+    qDebug("---> @FPGAFS: Start");
     m_bInitSuccess = Init();
     if (!m_bInitSuccess )
-        qDebug() << "UIO0 FPGAFS init failed!!!\r\n";
+        qDebug() << "UIO0 FPGAFS init failed!!!";
     else
-        qDebug() << "UIO0 FPGAFS init success \r\n";
+        qDebug() << "UIO0 FPGAFS init success";
+    qDebug("---> @FPGAFS: End");
 }
 
 FPGAFS::~FPGAFS()
@@ -30,7 +32,6 @@ FPGAFS::~FPGAFS()
 
 bool FPGAFS::Init()
 {
-    qDebug("---\n@FPGAFS: Start\n");
     bool bSuccess = true;
     // Open /dev/uio0
     char buf[1024],str[32], uio_dev[16];
@@ -48,7 +49,7 @@ bool FPGAFS::Init()
                 }
                 if(strstr(buf,"a0040000.hm2_axilite_int") || strstr(buf,"ff240000.holosynth_sysex") != NULL) {
                     sprintf(uio_dev, "/dev/%s", dir->d_name);
-                    qDebug() << "Found string in: " << uio_dev;
+                    qDebug() << "Found: " << uio_dev;
                     qDebug() << buf;
                 }
             }
@@ -67,7 +68,6 @@ bool FPGAFS::Init()
         close ( fd );
     }
     uio_mem_addr=(uint32_t *)virtual_base;
-    qDebug("---\n@FPGAFS: End\n");
     return bSuccess;
 }
 
