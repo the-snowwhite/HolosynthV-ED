@@ -36,7 +36,7 @@ synth1Tab::synth1Tab(fileTab *filetab, QWidget *parent)
 
     midiexternCheckBox = new QCheckBox("Hw Midi In",this);
     midiexternCheckBox->setGeometry(QRect(QPoint(890,450),QSize(150,35)));
-    QObject::connect(midiexternCheckBox,SIGNAL(pressed()),this,SLOT(midi_intern_pressed()));
+    QObject::connect(midiexternCheckBox,SIGNAL(stateChanged(int)),this,SLOT(midi_extern_pressed(int)));
     midiexternCheckBox->show();
 
     keyboard2openbutton = new QPushButton("key open",this);
@@ -157,8 +157,9 @@ void synth1Tab::synthtolcd()
         regvalue = fpga->SynthregGet(Address);                  setLCD(Address,regvalue);  }
     for(Address = 0x100 ;Address<0x180;Address++) { // mod + fb matrix
         regvalue = fpga->SynthregGet(Address);                  setLCD(Address,regvalue);  }
-    for(Address =0x280;Address<=0x282;Address++) { // common
-        regvalue = fpga->SynthregGet(Address);                  setLCD(Address,regvalue);
+    for(Address =0x280;Address<0x287;Address++) { // common
+//        regvalue = fpga->SynthregGet(Address);                  setLCD(Address,regvalue);
+        regvalue = ftab1->commondata[Address-0x280].toInt();    setLCD(Address,regvalue);
         if (Address == 0x282 && (regvalue & 0x10)==0) midiexternCheckBox->setChecked(true); }
     patch_name.clear();
     for(Address =0x290;Address<0x2A0;Address++) { // common patch name
@@ -352,25 +353,27 @@ void synth1Tab::com_button_pressed(void)
             Addressreg_x = i; Addressreg_y = (NUM_OSC * 5);
             if(i == 2) {
                 main_slider->setRange(0,15);
-                val = com_lcd[i]->value();
             } else {
                 main_slider->setRange(0,127);
-                val = com_lcd[i]->value();
             }
+//            val = com_lcd[i]->value();
+            val = ftab1->commondata[i].toInt();
             main_slider->setValue(val);
         }
     }
 }
 
-void synth1Tab::midi_intern_pressed(void){
+void synth1Tab::midi_extern_pressed(int value){
     unsigned int regaddress;
     regaddress = ((NUM_OSC * 5) << 4) + 2;
-    if(midiexternCheckBox->isChecked()){
+//    if(midiexternCheckBox->isChecked()){
+    if(value != 0){
         val = ((int) com_lcd[2]->value()) & 0x0f;
     } else {
         val = ((int) com_lcd[2]->value()) | 0x10;
     }
     fpga->SynthregSet(regaddress,val);
+//    qDebug("HW midi val = 0x%x  state_value =%d",val,value);
 }
 
 void synth1Tab::main_slider_val_change(int value)
@@ -383,13 +386,20 @@ void synth1Tab::main_slider_val_change(int value)
         fpga->SynthregSet(regaddress,value+64);
         setLCD(regaddress, value+64);
     }
-    else if (regaddress == 0x282){
-        if(midiexternCheckBox->isChecked()){
-            fpga->SynthregSet(regaddress,(value & 0x0f));
-        } else {
-            fpga->SynthregSet(regaddress,(value | 0x10));
+    else if (regaddress >= 0x280 && regaddress <= 0x287){
+        if (regaddress == 0x282){
+            if(midiexternCheckBox->isChecked()){
+                fpga->SynthregSet(regaddress,(value & 0x0f));
+                ftab1->commondata[regaddress - 0x280] = QString::number(value & 0x0f);
+            } else {
+                fpga->SynthregSet(regaddress,(value | 0x10));
+                ftab1->commondata[regaddress - 0x280] = QString::number(value | 0x10);
+            }
+            setLCD(regaddress, (value & 0x0f));
         }
-        setLCD(regaddress, (value & 0x0f));
+        else {
+            ftab1->commondata[regaddress - 0x280] = QString::number(value);
+        }
     }
     else {
         fpga->SynthregSet(regaddress,value);
@@ -430,11 +440,16 @@ void synth1Tab::setLCD(unsigned int RegAddress, u_int8_t newValue)
     }
     else if(RegAddress >= 0x280 && RegAddress < 0x287)
     {
-        com_lcd[reg_x]->display(newValue);
         if(RegAddress == 0x282) {
-            if((fpga->SynthregGet(0x282) & 0x10) == 0){
+            if((ftab1->commondata[2].toInt() & 0x10) == 0){
                 midiexternCheckBox->setChecked(true);
+                com_lcd[reg_x]->display(newValue);
+            } else {
+                midiexternCheckBox->setChecked(false);
+                com_lcd[reg_x]->display(newValue & 0x0F);
             }
+        } else {
+            com_lcd[reg_x]->display(newValue);
         }
     }
    else if(RegAddress >=0x290 && RegAddress < 0x2A0)
@@ -1029,20 +1044,23 @@ void synth1Tab::readSyxFile(QString filename)
     // com
     if (filetype == 1){
         FileBufferIndex = 0xC3;
-        for(Address=0x280;Address < 0x287;Address++) {
+/*        for(Address=0x280;Address < 0x287;Address++) {
             regvalue = Buffer.at(FileBufferIndex);
             fpga->SynthregSet(Address,regvalue);
             setLCD(Address,regvalue);
             FileBufferIndex++;
         }
+ */
     }
     else if (filetype == 2){
         FileBufferIndex = 0x283;
         for(Address=0x280;Address < 0x2A0;Address++) {
             regvalue = Buffer.at(FileBufferIndex);
             if(Address >= 0x290) qDebug("read_syx_file name data = %s at address 0x%x", &regvalue, Address);
-            fpga->SynthregSet(Address,regvalue);
-            setLCD(Address,regvalue);
+            if(Address < 0x287) {} else {
+                fpga->SynthregSet(Address,regvalue);
+                setLCD(Address,regvalue);
+            }
             FileBufferIndex++;
         }
     }

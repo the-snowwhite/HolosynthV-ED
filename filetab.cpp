@@ -131,7 +131,14 @@ void fileTab::loadSettings() {
     }
     bankfolderlist = settings.value("bankfolderlist").toStringList();
     qDebug() << "---> @loadsettings-> bankfolderlist = " << bankfolderlist;
+    commondata = settings.value("commondata").toStringList();
+    if(commondata.size() == 0){
+        qDebug("Commondata is not stored... creating default values");
+        commondata << "2" << "100" << "0" << "0" << "0" << "16" << "0";
+    }
+    qDebug() << "---> @loadsettings-> commondata = " << commondata;
 }
+
 void fileTab::saveSettings(QString f_name) {
 
     QSettings settings(m_sSettingsFile, QSettings::NativeFormat);
@@ -142,6 +149,7 @@ void fileTab::saveSettings(QString f_name) {
         sysexfld->setText(sText);
     }
     settings.setValue("bankfolderlist", QVariant::fromValue(bankfolderlist));
+    settings.setValue("commondata", QVariant::fromValue(commondata));
     qDebug("---> @saveSettings() end");
 }
 

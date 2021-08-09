@@ -51,6 +51,7 @@ public:
 //    QLineEdit *lineed;
     QStringList bankfolderlist;
     QString sysexrootfolder;
+    QStringList commondata;
     void loadSettings();
 
 signals:
