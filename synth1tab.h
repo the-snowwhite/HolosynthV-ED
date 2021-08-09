@@ -130,7 +130,7 @@ public slots:
     void mat_button_pressed(void);
     void env_button_pressed(void);
     void com_button_pressed(void);
-    void midi_intern_pressed(void);
+    void midi_extern_pressed(int value);
     void main_slider_val_change(int value);
     void setLCD(unsigned int RegAddress, u_int8_t newValue);
     void populate_folderbox();

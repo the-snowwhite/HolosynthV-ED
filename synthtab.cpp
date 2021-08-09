@@ -36,7 +36,7 @@ synth1Tab::synth1Tab(fileTab *filetab, QWidget *parent)
 
     midiexternCheckBox = new QCheckBox("Hw Midi In",this);
     midiexternCheckBox->setGeometry(QRect(QPoint(890,450),QSize(150,35)));
-    QObject::connect(midiexternCheckBox,SIGNAL(pressed()),this,SLOT(midi_intern_pressed()));
+    QObject::connect(midiexternCheckBox,SIGNAL(stateChanged(int)),this,SLOT(midi_extern_pressed(int)));
     midiexternCheckBox->show();
 
     keyboard2openbutton = new QPushButton("key open",this);
@@ -362,7 +362,7 @@ void synth1Tab::com_button_pressed(void)
     }
 }
 
-void synth1Tab::midi_intern_pressed(void){
+void synth1Tab::midi_extern_pressed(int value){
     unsigned int regaddress;
     regaddress = ((NUM_OSC * 5) << 4) + 2;
     if(midiexternCheckBox->isChecked()){
@@ -371,6 +371,7 @@ void synth1Tab::midi_intern_pressed(void){
         val = ((int) com_lcd[2]->value()) | 0x10;
     }
     fpga->SynthregSet(regaddress,val);
+    qDebug("HW midi val = 0x%x  state_value =%d",val,value);
 }
 
 void synth1Tab::main_slider_val_change(int value)
