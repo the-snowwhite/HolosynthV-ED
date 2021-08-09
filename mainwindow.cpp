@@ -34,11 +34,12 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    filetab->saveSettings("test");
 //    delete ui;
 }
 
 void MainWindow::quit(void)
 {
-//    saveSettings();
+    filetab->saveSettings("test");
     close();
 }
