@@ -1032,7 +1032,7 @@ void synth1Tab::readSyxFile(QString filename)
             FileBufferIndex++;
         }
     }
-    else if(filetype == 3){
+    else if(filetype == 2){
         FileBufferIndex = 0x103;
         for(Address=0x100;Address < 0x180;Address++) {
             regvalue = Buffer.at(FileBufferIndex);
