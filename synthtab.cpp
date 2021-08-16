@@ -10,7 +10,6 @@ synth1Tab::synth1Tab(fileTab *filetab, QWidget *parent)
 {
     qDebug("---> @synth1Tab: Start");
     fpga = new FPGAFS;
-    //    ftab1 = new fileTab();
     ftab1 = filetab;
     qDebug() << "QDir = " << ftab1->sysexfld->text();
 
@@ -62,7 +61,7 @@ synth1Tab::synth1Tab(fileTab *filetab, QWidget *parent)
     {
         synthtolcd();
     }
-
+/*
     folderbox = new QCheckList(this);
     folderbox->setFont(font10);
     populate_folderbox();
@@ -72,7 +71,7 @@ synth1Tab::synth1Tab(fileTab *filetab, QWidget *parent)
                                );
     folderbox->setGeometry(QRect(QPoint(885,275),QSize(100,35)));
     QObject::connect(folderbox,SIGNAL(activated(QString)),this,SLOT(on_folderbox_activated(QString)));
-
+*/
     f_label = new QLabel("   Patch Groups",this);
     f_label->setGeometry(QRect(QPoint(1090,457),QSize(170,25)));
     f_label->setAutoFillBackground(true);
@@ -97,7 +96,7 @@ synth1Tab::synth1Tab(fileTab *filetab, QWidget *parent)
 //   QObject::connect(folderlistbox,SIGNAL(itemPressed(QListWidgetItem)),this,SLOT(on_folderlistbox_statechanged(QListWidgetItem*)));
 
     fileloadbox = new QComboBox(this);
-    fileloadbox->setGeometry(QRect(QPoint(1030,275),QSize(205,35)));
+    fileloadbox->setGeometry(QRect(QPoint(885,275),QSize(350,35)));
     fileloadbox->setFont(font13);
 
     populate_fileloadbox();
@@ -464,18 +463,6 @@ void synth1Tab::setLCD(unsigned int RegAddress, u_int8_t newValue)
     }
 }
 
-void synth1Tab::populate_folderbox()
-{
-
-//    qDebug() << "populate_folderbox found:\n" << allLedits;
-//    QDir directory(ftab1->sysexfld->text());
-//    qDebug() << "fileTab(0).sysexfld->text() = " << MainWindow(this).filetab->sysexfld->text(); //ftab1->sysexfld->text();
-//    qDebug() << "fileTab().sysexfld->text() = " <<  fileTab( filetab(0).sysexfld->text(); //ftab1->sysexfld->text();
-//    QStringList syxFilesAndDirectories = directory.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
-//    folderbox->clear();
-//    folderbox->addItems(syxFilesAndDirectories);
-}
-
 void synth1Tab::populate_folderlistbox()
 {
 //    qDebug() << "Now in populate_folderlistbox";
@@ -485,7 +472,6 @@ void synth1Tab::populate_folderlistbox()
     QStringList syxDirectories = directory.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
     folderlistbox->clear();
     folderlistbox->addItems(syxDirectories);
-//    ftab1->bankfolderlist = syxDirectories;
     QListWidgetItem* item = 0;
 //    qDebug() << "bankfolderlist contents = " << ftab1->bankfolderlist;
     for(int i = 0; i < folderlistbox->count(); ++i){
@@ -496,56 +482,33 @@ void synth1Tab::populate_folderlistbox()
         else
             item->setCheckState(Qt::Unchecked);
     }
-//    ftab1->saveSettings("temp");
 }
 
 void synth1Tab::populate_fileloadbox()
 {
 //    qDebug("@ populate_fileloadbox");
     QStringList nameFilter("*.syx");
-    QStringList filelist;
     fileloadbox->clear();
     for (int i=0;i<ftab1->bankfolderlist.size();i++){
         QDir directory(ftab1->sysexfld->text() + "/" + ftab1->bankfolderlist[i]);
         QFileInfoList syxFilesAndDirectories = directory.entryInfoList(nameFilter);
-        for ( const auto& i : syxFilesAndDirectories  )
+        QString item;
+        for ( const auto& y : syxFilesAndDirectories  )
         {
-            filelist.append(i.completeBaseName());
-            fileloadbox->addItem(i.completeBaseName(),i.absoluteFilePath());
+            item = "<" + ftab1->bankfolderlist[i] + "> " + y.completeBaseName();
+            fileloadbox->addItem(item,y.absoluteFilePath());
         }
-//        fileloadbox->addItems(filelist);
     }
 }
 
 void synth1Tab::on_fileloadbox_activated(const QString &file)
 {
     qDebug("on_fileloadbox_activated with file %s",qUtf8Printable(file));
-//    fileTab *ftab1 = new fileTab();
-//    ftab1->display->append(file);
     patch_name.clear();
     qDebug("userData = %s",qUtf8Printable(fileloadbox->currentData().toString()));
-//    readSyxFile(ftab1->sysexfld->text() + "/" + file + ".syx");
     readSyxFile(fileloadbox->currentData().toString());
 }
 
-void synth1Tab::on_folderbox_activated(const QString &dir)
-{
-    qDebug("Input Dir = %s",qUtf8Printable(dir));
-    qDebug("globalCheckstate = %d",folderbox->globalCheckState());
-    for(int loop1 = 0; loop1 < folderbox->listChecked().size(); loop1++) {
-        qDebug("Dir's = %s",qUtf8Printable(folderbox->listChecked().at(loop1)));
-    }
-}
-/*
-void synth1Tab::on_folderlistbox_statechanged(const QListWidgetItem &item)
-{
-//    qDebug("folderlist state = %s",item);
-    for(int loop1 = 0; loop1 < folderbox->listChecked().size(); loop1++) {
-//        qDebug("Input Dir's = %s",qUtf8Printable(dirs.at(loop1)));
-       qDebug("Dir's = %s",qUtf8Printable(folderbox->listChecked().at(loop1)));
-    }
-}
-*/
 void synth1Tab::preset_pressed()
 {
     unsigned int r, size;
@@ -554,8 +517,6 @@ void synth1Tab::preset_pressed()
         if(presetbutton[r]->QAbstractButton::isDown())
         {
             active_preset = r;
-//            QMessageBox msgBox;//,msgBox2;
-//            QMessageBox *msgBox2 = new QMessageBox;
             if(PresetBuffer[r].isEmpty())
             {
                 preset_state = 1;// preset_was empty
@@ -1056,7 +1017,7 @@ void synth1Tab::readSyxFile(QString filename)
         FileBufferIndex = 0x283;
         for(Address=0x280;Address < 0x2A0;Address++) {
             regvalue = Buffer.at(FileBufferIndex);
-            if(Address >= 0x290) qDebug("read_syx_file name data = %s at address 0x%x", &regvalue, Address);
+//            if(Address >= 0x290) qDebug("read_syx_file name data = %s at address 0x%x", &regvalue, Address);
             if(Address < 0x287) {} else {
                 fpga->SynthregSet(Address,regvalue);
                 setLCD(Address,regvalue);
@@ -1076,14 +1037,19 @@ void synth1Tab::write_syx_file(QString filename)
     Buffer.prepend((char) 0x7D);
     Buffer.prepend((char) 0xF0);
     Buffer.append((char) 0xF7);
-    QFile fileB(ftab1->sysexfld->text() + "/" + filename);//
+
+    QFileDialog *fflddialog = new QFileDialog(this);
+    fflddialog->setStyleSheet("QPushButton{min-height: 80px; min-width: 300px;}");
+    fflddialog->setFileMode(QFileDialog::Directory);
+    QString fdirname = fflddialog->getExistingDirectory(this,tr("Open Directory"), ftab1->sysexfld->text(), QFileDialog::ShowDirsOnly | QFileDialog::DontUseNativeDialog);
+    QFile fileB(fdirname + "/" + filename);
+
     QMessageBox *msgBox = new QMessageBox;
-    msgBox->setText("<font size=12 > Saving preset " + QString::number(cur_save_index+1) +" <br> to file " + filename +"<br>size = "+ QString::number(Buffer.size()) +  "</font>");
+    msgBox->setText("<font size=12 > Saving preset " + QString::number(cur_save_index+1) +" <br> to file " + fdirname + "/" + filename +"<br>size = "+ QString::number(Buffer.size()) +  "</font>");
     msgBox->setInformativeText("<font size = 8> do you want to save under this filename ? </font>");
     msgBox->setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
     msgBox->setStyleSheet("background-color:red");
     int ret = msgBox->exec();
-//    QMessageBox::information(NULL,"show","<font size=12 > Saving preset " + QString::number(cur_save_index+1) +" <br> to file " + filename +"<br>size = "+ QString::number(Buffer.size()) +  "</font>");
     if(ret == QMessageBox::Yes)
     {
         if (!fileB.open(QIODevice::WriteOnly))

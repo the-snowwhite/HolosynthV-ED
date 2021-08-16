@@ -93,7 +93,7 @@ void fileTab::on_sdirbutton_pressed()
     flddialog->setStyleSheet("QPushButton{min-height: 80px; min-width: 300px;}");
     flddialog->setFileMode(QFileDialog::Directory);
     QString homedirpath = QDir::homePath();
-    QString dirname = flddialog->getExistingDirectory(this,tr("Open Folder", homedirpath.toStdString().c_str(), QFileDialog::DontUseNativeDialog));
+    QString dirname = flddialog->getExistingDirectory(this,tr("Open Folder"), homedirpath, QFileDialog::DontUseNativeDialog);
     sysexfld->setText(dirname);
     saveSettings(dirname);
 }

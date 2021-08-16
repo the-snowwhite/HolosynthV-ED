@@ -45,7 +45,6 @@ public:
     FPGAFS *fpga;
     fileTab *ftab1;
 
-//    widgetKeyBoard  *myKeyboard2;
     QLineEdit *filenamelineedit;
 
     QSlider *main_slider;
@@ -92,18 +91,12 @@ public:
 
     QByteArray patch_name;
 
-//   QMessageBox msgBox;
-//   QMessageBox msgBox2;
-//   QDialog *textdialog;
-//   QLabel *oklabel;
-//   QPushButton *okbutton;
+    QPushButton *overwriteButton;
+    QPushButton *recallButton;
+    QPushButton *saveButton;
+    QPushButton *cancelButton;
 
-   QPushButton *overwriteButton;
-   QPushButton *recallButton;
-   QPushButton *saveButton;
-   QPushButton *cancelButton;
-
-   QPushButton *renamebutton;
+    QPushButton *renamebutton;
 
     int Addressreg_x,Addressreg_y;
     int val;
@@ -133,9 +126,7 @@ public slots:
     void midi_extern_pressed(int value);
     void main_slider_val_change(int value);
     void setLCD(unsigned int RegAddress, u_int8_t newValue);
-    void populate_folderbox();
     void populate_folderlistbox();
-    void on_folderbox_activated(const QString &dir);
     void populate_fileloadbox();
     void on_fileloadbox_activated(const QString &file);
     void preset_pressed(void);

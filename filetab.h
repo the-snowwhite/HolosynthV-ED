@@ -32,9 +32,6 @@ public:
     explicit fileTab(QWidget *parent = 0);
     ~fileTab();
     QString* SYX_FILE_DIR;
-//    FPGAFS *fpga;
-//    synth1Tab* synthTab;
-//    QString *sysexfolder;
     QPushButton *closebutton;
     QPushButton *fileopenbutton;
     QPushButton *sdirbutton;
@@ -57,14 +54,11 @@ public:
 signals:
     void quit_touched(void);
     void key_return_touched(void);
-//    void textChanged(void);
-//    void synthread_touched(void);
 
 public slots:
     void on_closebutton_pressed();
     void on_keyboardopenbutton_pressed();
     void on_keyboardclosebutton_pressed();
-//    void on_synthtolcdbutton_pressed();
     void open_file_dialog();
     void on_sdirbutton_pressed();
     void saveSettings(QString f_name);
